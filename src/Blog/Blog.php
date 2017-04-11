@@ -27,6 +27,8 @@ class Blog
      * @param $content
      * @param $userId
      *
+     * @return int
+     *
      * @throws EmptyContentException
      * @throws EmptyTitleException
      * @throws NotFoundException
@@ -55,6 +57,8 @@ class Blog
 
         $stmt = $pdo->prepare("INSERT INTO posts (title, content, user_id) VALUES (?, ?, ?)");
         $stmt->execute([$title, $content, $userId]);
+
+        return $pdo->lastInsertId();
     }
 
 
@@ -63,7 +67,7 @@ class Blog
      *
      * @param $userId
      *
-     * @return array
+     * @return array | null
      * @throws NotFoundException
      */
     public function getPosts($userId)
@@ -72,6 +76,7 @@ class Blog
         $pdo = $this->getPdo();
 
         $stmt = $pdo->prepare('SELECT * FROM posts WHERE user_id = ?');
+
         $stmt->execute([$userId]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
