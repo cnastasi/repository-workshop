@@ -13,4 +13,6 @@ The workshop begin from step0 tag and its almost full covered by tests.
 
 Every steps brings code refactorization and improvement in design.
  
-In the workshop I'll explain the meaning of the every step. 
+In the workshop I'll explain the meaning of every step. 
+
+###-- WORK IN PROGRESS --
