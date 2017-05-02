@@ -1,4 +1,4 @@
-Feature: As a USER I want to create a post
+Feature: As a USER I want to create a POST
 
   Background:
     Given those users:
@@ -9,8 +9,4 @@ Feature: As a USER I want to create a post
     When the user 1 publish a post:
       | title   | This is a title   |
       | content | This is a content |
-    Then I can see the post:
-      | id      | 1                 |
-      | title   | This is a title   |
-      | content | This is a content |
-      | user_id | 1                 |
+    Then the post is stored

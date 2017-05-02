@@ -1,11 +1,9 @@
 <?php
 
-use Behat\Behat\Hook\Scope\AfterScenarioScope;
-use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Behat\Context\Context;
-use Behat\Gherkin\Node\PyStringNode;
+use Behat\Behat\Hook\Scope\AfterScenarioScope;
+use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Gherkin\Node\TableNode;
-use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
 use Blog\Blog;
 use PHPUnit\Framework\Assert;
 
@@ -19,27 +17,47 @@ require_once 'config.php';
 class FeatureContext implements Context
 {
     /** @var array */
-    protected $post;
+    protected $user;
+
+    /** @var int */
+    protected $currentUserId;
 
     /** @var array */
-    protected $user;
+    protected $posts;
+
+    /** @var array */
+    protected $comments;
 
     /** @var PDO */
     private $pdo;
 
+    /**
+     * FeatureContext constructor.
+     */
     public function __construct()
     {
         $this->pdo = $this->getPdo();
     }
 
     /**
-     * @AfterScenario
+     * @BeforeScenario
      */
-    public function cleanDB(AfterScenarioScope $scope)
+    public function cleanDB(BeforeScenarioScope $scope)
     {
         $this->pdo->query('TRUNCATE comments');
         $this->pdo->query('TRUNCATE posts');
         $this->pdo->query('TRUNCATE users');
+    }
+
+    /**
+     * @BeforeScenario
+     */
+    public function cleanProperties()
+    {
+        $this->comments      = null;
+        $this->posts         = null;
+        $this->currentUserId = null;
+        $this->user          = null;
     }
 
     /**
@@ -62,22 +80,23 @@ class FeatureContext implements Context
         $this->createAnUser($data);
     }
 
-    private function createAnUser($data)
-    {
-        $statement = $this->pdo->prepare('INSERT INTO users (id, name) VALUES (:id, :name)');
-        $statement->execute($data);
-    }
-
     /**
      * @When /^the user (\d+) publish a post:$/
      */
     public function theUserPublishAPost($userId, TableNode $table)
     {
-        $this->post = $table->getRowsHash();
+        $post = $table->getRowsHash();
 
         $blog = new Blog();
 
-        $blog->createPost($this->post['title'], $this->post['content'], $userId);
+        $blog->createPost($post['title'], $post['content'], $userId);
+
+        $post['id']      = 1;
+        $post['user_id'] = $userId;
+
+        $this->posts = [
+            $post
+        ];
     }
 
     /**
@@ -93,20 +112,181 @@ class FeatureContext implements Context
     }
 
     /**
-     * @Then /^I can see the post:$/
+     * @Given /^those posts:$/
      */
-    public function iCanSeeThePost(TableNode $table)
+    public function thosePosts(TableNode $table)
     {
-        $expectedData = $table->getRowsHash();
+        $rows = $table->getHash();
 
-        $statement = $this->pdo->prepare('SELECT * FROM posts WHERE id=:id');
+        foreach ($rows as $row) {
+            $this->createAPost($row);
+        }
+    }
 
-        $statement->execute(['id' => $expectedData['id']]);
+    /**
+     * @Given /^those comments:$/
+     */
+    public function thoseComments(TableNode $table)
+    {
+        $rows = $table->getHash();
 
-        $data = $statement->fetch(PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            $this->createAComment($row);
+        }
+    }
 
-        unset($data['date']);
+    /**
+     * @param string    $tableName
+     * @param TableNode $table
+     */
+    private function iSee($tableName, $expectedData)
+    {
+        $records = $this->pdo->query("SELECT * FROM {$tableName}");
+
+        $data = $records->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->clearDate($data);
 
         Assert::assertEquals($expectedData, $data);
+    }
+
+    private function createAnUser($data)
+    {
+        $statement = $this->pdo->prepare('INSERT INTO users (id, name) VALUES (:id, :name)');
+        $statement->execute($data);
+    }
+
+    private function createAPost($data)
+    {
+        $query = 'INSERT INTO posts (id, title, content, user_id) ' .
+                 'VALUES (:id, :title, :content, :author)';
+
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($data);
+    }
+
+    private function createAComment($data)
+    {
+        $query = 'INSERT INTO comments (id, content, post_id, user_id) ' .
+                 'VALUES (:id, :content, :post, :author)';
+
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($data);
+    }
+
+    /**
+     * @When /^the user (\d+) comment the post (\d+):$/
+     */
+    public function theUserCommentThePost1($userId, $postId, TableNode $table)
+    {
+        $comment = $table->getRow(0);
+
+        $blog = new Blog();
+
+        $blog->addComment($comment[0], $postId, $userId);
+
+        $this->comments = [
+            [
+                'id'      => 1,
+                'content' => $comment[0],
+                'post_id' => $postId,
+                'user_id' => $userId
+            ]
+        ];
+    }
+
+    /**
+     * @Then /^I see those comments:$/
+     */
+    public function iSeeThoseComments(TableNode $table)
+    {
+        $expectedComments = $table->getHash();
+
+        Assert::assertEquals($expectedComments, $this->comments);
+    }
+
+    /**
+     * @Then /^I see the posts for user (\d+):$/
+     */
+    public function iSeeThePostsForUser($userId, TableNode $table)
+    {
+        $blog = new Blog();
+
+        $posts = $blog->getPosts($userId);
+
+        $this->clearDate($posts);
+
+        $expectedData = $table->getHash();
+
+        Assert::assertEquals($expectedData, $posts);
+    }
+
+    private function clearDate(array &$data)
+    {
+        foreach ($data as &$row) {
+            unset($row['date']);
+        }
+    }
+
+    /**
+     * @Given /^I'm the user (\d+)$/
+     */
+    public function iMTheUser($userId)
+    {
+        $this->currentUserId = $userId;
+    }
+
+    /**
+     * @When /^I request all my posts$/
+     */
+    public function iRequestAllMyPosts()
+    {
+        $blog = new Blog();
+
+        $posts = $blog->getPosts($this->currentUserId);
+
+        $this->clearDate($posts);
+
+        $this->posts = $posts;
+    }
+
+    /**
+     * @Then /^I see those posts:$/
+     */
+    public function iSeeThosePosts(TableNode $table)
+    {
+        $expectedPosts = $table->getHash();
+
+        Assert::assertEquals($expectedPosts, $this->posts);
+    }
+
+    /**
+     * @When /^I request all the comments of the post (\d+)$/
+     */
+    public function iRequestAllTheCommentsOfThePost($postId)
+    {
+        $blog = new Blog();
+
+        $comments = $blog->getComments($postId);
+
+        $this->clearDate($comments);
+
+        $this->comments = $comments;
+    }
+
+    /**
+     * @Then /^the comment is stored$/
+     */
+    public function theCommentIsStored()
+    {
+        $this->iSee('comments', $this->comments);
+    }
+
+    /**
+     * @Then /^the post is stored$/
+     */
+    public function thePostIsStored()
+    {
+        $this->iSee('posts', $this->posts);
     }
 }
