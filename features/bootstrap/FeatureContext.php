@@ -4,7 +4,8 @@ use Behat\Behat\Context\Context;
 use Behat\Behat\Hook\Scope\AfterScenarioScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Gherkin\Node\TableNode;
-use Blog\Blog;
+use Blog\Comment;
+use Blog\Post;
 use PHPUnit\Framework\Assert;
 
 define('TEST', 'test');
@@ -87,7 +88,7 @@ class FeatureContext implements Context
     {
         $post = $table->getRowsHash();
 
-        $blog = new Blog();
+        $blog = new Post();
 
         $blog->createPost($post['title'], $post['content'], $userId);
 
@@ -181,7 +182,7 @@ class FeatureContext implements Context
     {
         $comment = $table->getRow(0);
 
-        $blog = new Blog();
+        $blog = new Comment();
 
         $blog->addComment($comment[0], $postId, $userId);
 
@@ -210,7 +211,7 @@ class FeatureContext implements Context
      */
     public function iSeeThePostsForUser($userId, TableNode $table)
     {
-        $blog = new Blog();
+        $blog = new Post();
 
         $posts = $blog->getPosts($userId);
 
@@ -241,7 +242,7 @@ class FeatureContext implements Context
      */
     public function iRequestAllMyPosts()
     {
-        $blog = new Blog();
+        $blog = new Post();
 
         $posts = $blog->getPosts($this->currentUserId);
 
@@ -265,7 +266,7 @@ class FeatureContext implements Context
      */
     public function iRequestAllTheCommentsOfThePost($postId)
     {
-        $blog = new Blog();
+        $blog = new Comment();
 
         $comments = $blog->getComments($postId);
 
