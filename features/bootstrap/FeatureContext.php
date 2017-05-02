@@ -86,17 +86,17 @@ class FeatureContext implements Context
      */
     public function theUserPublishAPost($userId, TableNode $table)
     {
-        $post = $table->getRowsHash();
+        $postData = $table->getRowsHash();
 
-        $blog = new Post();
+        $post = new Post();
 
-        $blog->createPost($post['title'], $post['content'], $userId);
+        $post->createPost($postData['title'], $postData['content'], $userId);
 
-        $post['id']      = 1;
-        $post['user_id'] = $userId;
+        $postData['id']      = 1;
+        $postData['user_id'] = $userId;
 
         $this->posts = [
-            $post
+            $postData
         ];
     }
 
@@ -180,16 +180,16 @@ class FeatureContext implements Context
      */
     public function theUserCommentThePost1($userId, $postId, TableNode $table)
     {
-        $comment = $table->getRow(0);
+        $commentData = $table->getRow(0);
 
-        $blog = new Comment();
+        $comment = new Comment();
 
-        $blog->addComment($comment[0], $postId, $userId);
+        $comment->addComment($commentData[0], $postId, $userId);
 
         $this->comments = [
             [
                 'id'      => 1,
-                'content' => $comment[0],
+                'content' => $commentData[0],
                 'post_id' => $postId,
                 'user_id' => $userId
             ]
@@ -211,9 +211,9 @@ class FeatureContext implements Context
      */
     public function iSeeThePostsForUser($userId, TableNode $table)
     {
-        $blog = new Post();
+        $post = new Post();
 
-        $posts = $blog->getPosts($userId);
+        $posts = $post->getPosts($userId);
 
         $this->clearDate($posts);
 
@@ -242,9 +242,9 @@ class FeatureContext implements Context
      */
     public function iRequestAllMyPosts()
     {
-        $blog = new Post();
+        $post = new Post();
 
-        $posts = $blog->getPosts($this->currentUserId);
+        $posts = $post->getPosts($this->currentUserId);
 
         $this->clearDate($posts);
 
@@ -266,9 +266,9 @@ class FeatureContext implements Context
      */
     public function iRequestAllTheCommentsOfThePost($postId)
     {
-        $blog = new Comment();
+        $comment = new Comment();
 
-        $comments = $blog->getComments($postId);
+        $comments = $comment->getComments($postId);
 
         $this->clearDate($comments);
 
