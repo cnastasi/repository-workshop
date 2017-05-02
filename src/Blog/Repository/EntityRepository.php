@@ -19,6 +19,18 @@ use Blog\Entity;
 interface EntityRepository
 {
     /**
+     * @param $id
+     *
+     * @return mixed
+     */
+    public function get($id);
+
+    /**
+     * @return mixed
+     */
+    public function getAll();
+
+    /**
      * @param Entity $entity
      */
     public function save(Entity $entity);

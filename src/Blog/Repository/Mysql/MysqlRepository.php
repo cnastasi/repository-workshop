@@ -86,6 +86,29 @@ abstract class MysqlRepository implements EntityRepository
     }
 
     /**
+     * @param $id
+     *
+     * @return Entity
+     */
+    public function get($id)
+    {
+        $where  = "id = :id";
+        $values = ['id' => $id];
+
+        $result = $this->getBy($where, $values);
+
+        return array_shift($result);
+    }
+
+    /**
+     * @return Entity[]
+     */
+    public function getAll()
+    {
+        return $this->getBy('1 = 1', []);
+    }
+
+    /**
      * @param array $data
      *
      * @return string
@@ -101,7 +124,14 @@ abstract class MysqlRepository implements EntityRepository
         return sprintf($query, $query_keys, $query_values);
     }
 
-    protected function getBy ($where, $values) {
+    /**
+     * @param string $where
+     * @param array  $values
+     *
+     * @return array
+     */
+    protected function getBy($where, $values)
+    {
         $query = "SELECT * FROM {$this->getTable()} WHERE {$where};";
 
         $stmt = $this->connection->prepare($query);
@@ -123,7 +153,8 @@ abstract class MysqlRepository implements EntityRepository
      *
      * @return array
      */
-    protected function serialize(Entity $entity) {
+    protected function serialize(Entity $entity)
+    {
         return $this->entitySerializer->serialize($entity);
     }
 
@@ -132,7 +163,8 @@ abstract class MysqlRepository implements EntityRepository
      *
      * @return Entity
      */
-    protected function createEntity(array $data) {
+    protected function createEntity(array $data)
+    {
         return $this->entityFactory->create($this->getEntity(), $data);
     }
 }
