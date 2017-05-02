@@ -1,5 +1,5 @@
 <?php
-use Blog\Blog;
+use Blog\Comment;
 use PHPUnit\Framework\Assert;
 
 /**
@@ -22,7 +22,7 @@ class CommentTest extends BlogTest
 
         $content = 'This is a comment';
 
-        $blog = new Blog();
+        $blog = new Comment();
 
         $blog->addComment($content, $postId, $userId2);
 
@@ -54,7 +54,7 @@ class CommentTest extends BlogTest
             ['id' => '3', 'content' => 'Just a comment 3', 'user_id' => $userId3, 'post_id' => $postId],
         ];
 
-        $blog = new Blog();
+        $blog = new Comment();
 
         foreach ($expectedComments as $comment) {
             $blog->addComment($comment['content'], $comment['post_id'], $comment['user_id']);
@@ -74,7 +74,7 @@ class CommentTest extends BlogTest
      */
     public function shouldRaiseEmptyContentException()
     {
-        $blog = new Blog();
+        $blog = new Comment();
         $blog->addComment('', null, 0);
     }
 
@@ -88,7 +88,7 @@ class CommentTest extends BlogTest
         $userId = $this->createUser('John Smith');
         $postId = $this->createPost('Just a title', 'Just a content', 1);
 
-        $blog = new Blog();
+        $blog = new Comment();
         $blog->addComment('Just a comment', $postId, $userId + 1);
     }
 
@@ -101,7 +101,7 @@ class CommentTest extends BlogTest
     {
         $userId = $this->createUser('John Smith');
 
-        $blog = new Blog();
+        $blog = new Comment();
         $blog->addComment('Just a comment', null, $userId);
     }
 

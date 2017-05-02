@@ -1,6 +1,7 @@
 <?php
 
-use Blog\Blog;
+use Blog\Comment;
+use Blog\Post;
 use PHPUnit\Framework\Assert;
 
 
@@ -21,7 +22,7 @@ class PostTest extends BlogTest
         $title   = 'Just a title';
         $content = 'Lorem ipsum etc etc';
 
-        $blog = new Blog();
+        $blog = new Post();
         $blog->createPost($title, $content, $userId);
 
         $this->assertPostsEqualsTo(
@@ -49,7 +50,7 @@ class PostTest extends BlogTest
             ['id' => '3', 'title' => 'Just a title 3', 'content' => 'Just a content 3', 'user_id' => $userId],
         ];
 
-        $blog = new Blog();
+        $blog = new Post();
 
         foreach ($expectedPosts as $post) {
             $blog->createPost($post['title'], $post['content'], $post['user_id']);
@@ -69,7 +70,7 @@ class PostTest extends BlogTest
      */
     public function shouldRaiseEmptyTitleException()
     {
-        $blog = new Blog();
+        $blog = new Post();
         $blog->createPost('', null, 0);
     }
 
@@ -80,7 +81,7 @@ class PostTest extends BlogTest
      */
     public function shouldRaiseEmptyContentException()
     {
-        $blog = new Blog();
+        $blog = new Post();
         $blog->createPost('Just a title', null, 0);
     }
 
@@ -91,7 +92,7 @@ class PostTest extends BlogTest
      */
     public function shouldRaiseUserNotFoundException()
     {
-        $blog = new Blog();
+        $blog = new Post();
         $blog->createPost('Just a title', 'A content', 0);
     }
 
